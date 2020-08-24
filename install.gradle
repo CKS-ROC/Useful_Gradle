@@ -1,0 +1,270 @@
+//Ref : https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle
+//Ref : https://github.com/palantir/gradle-git-version
+//Ref : https://github.com/n0mer/gradle-git-properties
+//Ref : https://juejin.im/post/6844904144386392071
+apply plugin: 'com.github.dcendents.android-maven'
+//https://www.jianshu.com/p/960a60a84339
+apply plugin: 'maven-publish'
+version = this.ext.library_versionName
+group = this.ext.library_pom_bintray_GroupId
+//FIXME  the library name must(?) the same project name ??!!  how set it diff ?
+def pomArtifactId = project.name                         // Maven library name for the artifact
+tasks.withType(Javadoc).all { enabled = false }
+
+def checkIsAndroidProject() {
+    def plugins = project.getPlugins()
+    return plugins.hasPlugin('com.android.application') || plugins.hasPlugin('com.android.library')
+}
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                if (checkIsAndroidProject()) {
+                    packaging 'aar'
+                } else {
+                    packaging 'jar'
+                }
+
+                // Add your description here
+                name pomArtifactId
+                description = this.ext.mavLibraryDescription
+                url this.ext.mavSiteUrl
+                // Set your license
+                licenses {
+                    license {
+                        this.ext.mavLibraryLicenses.each{key,value->
+                            name =key
+                            url =value
+                        }
+                    }
+                }
+                developers {
+                    developer {
+                        id this.ext.developerid
+                        name this.ext.developername
+                        email this.ext.developeremail
+                    }
+                }
+                scm {
+                    connection this.ext.scmConnectionUrl
+                    developerConnection this.ext.scmDeveloperConnectionUrl
+                    url this.ext.scmUrl
+                }
+            }
+        }
+    }
+}
+
+if (checkIsAndroidProject()) {
+    task androidJavadocs(type: Javadoc) {
+//        title = "${getStringProperty("mavProjectName")} ${project.version} API"
+        description "Generates Javadoc"
+        source = android.sourceSets.main.java.srcDirs
+//        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath += files(android.bootClasspath)
+
+        android.libraryVariants.all { variant ->
+            if (variant.name == 'release') {
+                owner.classpath += variant.javaCompileProvider.get().classpath
+            }
+        }
+        exclude '**/R.html', '**/R.*.html', '**/index.html', '**/*.kt'
+        options {
+//            windowTitle("${getStringProperty("mavProjectName")} ${project.version} Reference")
+            locale = 'en_US'
+            encoding = 'UTF-8'
+            charSet = 'UTF-8'
+            links("http://docs.oracle.com/javase/7/docs/api/")
+            linksOffline("http://d.android.com/reference", "${android.sdkDirectory}/docs/reference")
+            setMemberLevel(JavadocMemberLevel.PUBLIC)
+        }
+    }
+
+    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+        classifier = 'javadoc'
+        baseName = pomArtifactId
+        from androidJavadocs.destinationDir
+    }
+
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        baseName = pomArtifactId
+        from android.sourceSets.main.java.srcDirs
+    }
+} else { //Here is pure java
+    tasks.withType(JavaCompile) { //Here is pure java
+        options.encoding = 'UTF-8'
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        archiveClassifier = 'javadoc'
+        baseName = pomArtifactId
+        from javadoc.destinationDir
+    }
+}
+
+project.afterEvaluate {
+    publishing {
+        publications {
+            mavenPublish(MavenPublication) {
+                if (checkIsAndroidProject()) {
+                    artifact bundleReleaseAar
+                    artifact androidJavadocsJar
+                    artifact androidSourcesJar
+                } else {
+                    artifact jar
+                    artifact sourcesJar
+                    artifact javadocJar
+                }
+                //FIXME
+                decoratePom(pom)
+            }
+        }
+
+        repositories {
+            //FIXME set true/false @ ext build.grale  !!
+            //FIXME get repo setting from reposetting file lie : repo_setting.properties !!!
+            def isToRemoteRepo = true
+            def isToInternalRepo = false
+            def isToMavenLocal = false
+            def isToGit = true
+            //Ref : https://www.jianshu.com/p/960a60a84339
+            //Ref : https://www.itread01.com/content/1546745592.html
+            //Ref : https://medium.com/michael-%E9%9A%A8%E7%AD%86/another-way-to-create-a-private-maven-repository-9c6a45952228
+            //Ref : https://github.com/gradle/gradle/blob/master/subprojects/maven/src/main/java/org/gradle/api/publish/maven/tasks/PublishToMavenLocal.java
+            //Ref : https://github.com/mageddo/gradle-embed-maven-repo
+            //Ref : https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-gradle-for-use-with-github-packages
+            //Ref : https://github.com/hyysguyang/gradle-git-maven-repo-plugin
+            //FIXME use git public project as repo & use git push ?
+            if (isToGit) {
+                maven {
+                    url = "file:///${rootProject.rootDir}/maven-repository"
+                }
+            }
+            //TODO build & deploy Sonatype Nexus Repository
+            if (isToRemoteRepo) {
+                maven {
+                    credentials {
+                        username "my repo username"
+                        password "my repo password"
+                    }
+                    url = "my repo url"
+                }
+            }
+
+            //TODO Project local repo
+            if (isToInternalRepo) {
+                maven {
+                    url = "file:///${this.project.rootProject.rootDir}/maven-repository"
+//                    url = getStringProperty("mavRepoInternalUrl")
+                }
+            }
+
+            if (isToMavenLocal || (!isToInternalRepo && !isToRemoteRepo)) {
+                mavenLocal()
+            }
+        }
+    }
+}
+
+def decoratePom(pom) {
+    pom.name = project.name
+    pom.description = this.ext.mavLibraryDescription
+    pom.url = this.ext.mavSiteUrl
+    pom.inceptionYear = new Date().format("yyyy-MM-dd").toString()
+
+    pom.licenses {
+        license {
+            this.ext.mavLibraryLicenses.each{key,value->
+                name =key
+                url =value
+            }
+        }
+    }
+
+    pom.developers {
+        developer {
+            id = this.ext.developerid
+            name = this.ext.developername
+            email = this.ext.developeremail
+        }
+    }
+    pom.scm {
+        connection = this.ext.scmConnectionUrl
+        developerConnection = this.ext.scmDeveloperConnectionUrl
+        url = this.ext.scmUrl
+    }
+    addDependencies(pom)
+}
+
+def addDependencies(pom) {
+    pom.withXml {
+        final dependenciesNode = asNode().appendNode('dependencies')
+        ext.addDependency = { Dependency dep, String scope ->
+            if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified")
+                return // ignore invalid dependencies
+
+            if (dep.artifacts.size() > 0) {
+                dep.artifacts.each { art ->
+                    addDependencyNode(dependenciesNode, dep, scope, art.classifier, art.extension)
+                }
+            } else {
+                addDependencyNode(dependenciesNode, dep, scope, null, null)
+            }
+        }
+        manageConfigurations(configurations)
+    }
+}
+
+def addDependencyNode(dependenciesNode, dep, scope, classifier, extension) {
+    final dependencyNode = dependenciesNode.appendNode('dependency')
+    dependencyNode.appendNode('groupId', dep.group)
+    dependencyNode.appendNode('artifactId', dep.name)
+    dependencyNode.appendNode('version', dep.version)
+
+    if (classifier != null) {
+        dependencyNode.appendNode('classifier', classifier)
+    }
+
+    if (extension != null) {
+        dependencyNode.appendNode('type', extension)
+    }
+
+    dependencyNode.appendNode('scope', scope)
+
+    if (!dep.transitive) {
+        // If this dependency is transitive, we should force exclude all its dependencies them from the POM
+        final exclusionNode = dependencyNode.appendNode('exclusions').appendNode('exclusion')
+        exclusionNode.appendNode('artifactId', '*')
+        exclusionNode.appendNode('groupId', '*')
+    } else if (!dep.properties.excludeRules.empty) {
+        // Otherwise add specified exclude rules
+        final exclusionsNode = dependencyNode.appendNode('exclusions')
+        dep.properties.excludeRules.each { ExcludeRule rule ->
+            final exclusionNode = exclusionsNode.appendNode('exclusion')
+            exclusionNode.appendNode('artifactId', rule.module ?: '*')
+            exclusionNode.appendNode('groupId', rule.group ?: '*')
+        }
+    }
+}
+
+def manageConfigurations(configurations) {
+    configurations.compile.getDependencies().each { dep -> addDependency(dep, "compile") }
+    configurations.api.getDependencies().each { dep -> addDependency(dep, "compile") }
+    configurations.implementation.getDependencies().each { dep -> addDependency(dep, "runtime") }
+    configurations.testImplementation.getDependencies().each { dep -> addDependency(dep, "test") }
+    configurations.testCompile.getDependencies().each { dep -> addDependency(dep, "test") }
+
+    if (!checkIsAndroidProject()) {
+        configurations.runtime.getDependencies().each { dep -> addDependency(dep, "runtime") }
+        configurations.testRuntime.getDependencies().each { dep -> addDependency(dep, "test") }
+    }
+}

@@ -1,0 +1,50 @@
+////Ref :  https://github.com/bintray/gradle-bintray-plugin
+////Ref :  http://stackoverflow.com/questions/43291448/artifact-or-version-defined-in-the-pom-file-do-not-match
+////Ref :  https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle
+apply plugin: "com.jfrog.bintray"
+version = this.ext.library_versionName
+group = this.ext.library_pom_bintray_GroupId
+//FIXME  the library name must(?) the same project name ??!!  how set it diff ?
+def pomArtifactId = project.name                         // Maven library name for the artifact
+
+Properties properties = new Properties()
+properties.load(this.file('bintray.properties').newDataInputStream())
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+    configurations = ['archives']
+    override = true
+    pkg {
+        repo = this.ext.maven_repo_name
+        // it is the name that appears in bintray when logged
+        name = pomArtifactId
+        websiteUrl = this.ext.scmUrl
+        vcsUrl = this.ext.scmConnectionUrl
+        licenses = ["Apache-2.0"]
+        publish = true
+        publicDownloadNumbers = true
+        version {
+//            gpg {
+//                sign = true
+//                passphrase = properties.getProperty("bintray.gpg.password")
+//            }
+//            mavenCentralSync {
+//                sync = true
+//                user = properties.getProperty("bintray.oss.user") //OSS user token
+//                password = properties.getProperty("bintray.oss.password") //OSS user password
+//                close = '1'
+//            }
+        }
+    }
+}
+
+//Ref : https://github.com/natanfudge/KotlinAwesomePrinter/blob/master/build.gradle
+bintrayUpload.doFirst {
+    publications = publishing.publications.collect {
+        it.name
+    }.findAll {
+        it != "kotlinMultiplatform"
+    }
+}
+
+bintrayUpload.dependsOn publishToMavenLocal
