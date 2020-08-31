@@ -34,9 +34,9 @@ install {
                 // Set your license
                 licenses {
                     license {
-                        this.ext.mavLibraryLicenses.each{key,value->
-                            name =key
-                            url =value
+                        this.ext.mavLibraryLicenses.each { key, value ->
+                            name = key
+                            url = value
                         }
                     }
                 }
@@ -82,6 +82,29 @@ if (checkIsAndroidProject()) {
         }
     }
 
+//    def jniSymbolsJar = task("${variant.name}SymbolJar", type: Jar, dependsOn: 'build') {
+//        classifier = "so-symbols"
+//        boolean hasNativeBuildTask = false
+//        tasks.each { task ->
+//            if (task.getName().startsWith("externalNativeBuild")) {
+//                hasNativeBuildTask = true
+//            }
+//        }
+//
+//        if (!hasNativeBuildTask) {
+//            return
+//        }
+//
+//        if (hasFlavors) {
+//            variant.productFlavors.each { flavor ->
+//                from file("build/intermediates/cmake/${flavor.name}/release/obj/")
+//            }
+//        } else {
+//            from file("build/intermediates/cmake/release/obj/")
+//        }
+//
+//    }
+
     task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
         classifier = 'javadoc'
         baseName = pomArtifactId
@@ -110,10 +133,52 @@ if (checkIsAndroidProject()) {
         from javadoc.destinationDir
     }
 }
-
+//Ref : https://developer.android.com/studio/build/maven-publish-plugin
+//Ref : https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:tasks
+//Ref : https://stackoverflow.com/questions/26874498/publish-an-android-library-to-maven-with-aar-and-source-jar
+//Ref : https://github.com/gradle/gradle/issues/4783
+//Ref : https://blog.csdn.net/bangelua/article/details/95017031
+//Ref : https://blog.csdn.net/pxq10422/article/details/105127853/?utm_medium=distribute.pc_relevant.none-task-blog-title-8&spm=1001.2101.3001.4242
+//Ref : https://github.com/YuTianTina/ForMultiUploadMaven/blob/master/mylibrary/maven_variant_config.gradle
 project.afterEvaluate {
     publishing {
         publications {
+//            mavenPublish(MavenPublication) {
+//                if (checkIsAndroidProject()) {
+//                    def hasFlavors = false
+////                    artifact bundleReleaseAar
+//                    android.libraryVariants.all { variant ->
+//                        if (variant.buildType.name.contains("debug")) {
+//                            return
+//                        }
+//                       hasFlavors = !variant.flavorName.isEmpty()
+//                        println "install Show libraryVariants hasFlavors : "+hasFlavors
+//                        def artifactIdSuffix = hasFlavors ? variant.flavorName.replace('_', '-').capitalize() : ''
+//                        println "install Show libraryVariants artifactIdSuffix  : "+artifactIdSuffix
+//                        def publicationName = "${variant.name.capitalize()}"
+//                        println "install Show libraryVariants publicationName  : "+publicationName
+////                        def flavorbuildtype =variant.name
+////                        println "install Show libraryVariants flavor with buildtype : "+flavorbuildtype
+////                        if (flavorbuildtype.toString().contains("Release")){
+//////                            println "install Show libraryVariants flavor with buildtype UpperCase: "+flavorbuildtype.substring(0, 1).toUpperCase()+ flavorbuildtype.substring(1)
+////                            def taskname =  "bundle"+flavorbuildtype.substring(0, 1).toUpperCase()+ flavorbuildtype.substring(1)+"Aar"
+//////                            println "install Show libraryVariants taskname : "+taskname
+////                            artifact taskname
+////                        }
+//                        def taskname ="bundle"+"${variant.name.capitalize()}"+"Aar"
+//                        artifact tasks.findByName(taskname)
+//                    }
+//
+//                    artifact androidJavadocsJar
+//                    artifact androidSourcesJar
+//                } else {
+//                    artifact jar
+//                    artifact sourcesJar
+//                    artifact javadocJar
+//                }
+//                //FIXME
+//                decoratePom(pom)
+//            }
             if (checkIsAndroidProject()) {
                 def hasFlavors = false
                 android.libraryVariants.all { variant ->
@@ -122,7 +187,7 @@ project.afterEvaluate {
                     }
                     hasFlavors = !variant.flavorName.isEmpty()
                     if (hasFlavors) {
-//                        println "install Show libraryVariants hasFlavors : " + hasFlavors
+                        println "install Show libraryVariants hasFlavors : " + hasFlavors
                         def artifactIdSuffix = hasFlavors ? variant.flavorName.replace('_', '-').capitalize() : ''
                         variant.productFlavors.each { flavor ->
                             def flavorArtifactIdSuffix = flavor.ext.has('artifactIdSuffix') ? flavor.ext.artifactIdSuffix : flavor.name
@@ -132,7 +197,8 @@ project.afterEvaluate {
                                 artifactIdSuffix = artifactIdSuffix.replace(flavor.name.capitalize(), "")
                             }
                         }
-//                        println "install Show libraryVariants artifactIdSuffix  : " + artifactIdSuffix
+                        println "install Show libraryVariants artifactIdSuffix  : " + artifactIdSuffix
+
                         def publicationName = "${variant.name.capitalize()}"
 //                        println "install Show libraryVariants publicationName  : " + publicationName
 //                        def flavorbuildtype =variant.name
@@ -156,7 +222,7 @@ project.afterEvaluate {
                         mavenPublish(MavenPublication) {
                             artifact bundleReleaseAar
                             artifact androidJavadocsJar
-                            artifact javadocJar
+                            artifact androidSourcesJar
                             decoratePom(pom)
                         }
                     }
@@ -225,9 +291,9 @@ def decoratePom(pom) {
 
     pom.licenses {
         license {
-            this.ext.mavLibraryLicenses.each{key,value->
-                name =key
-                url =value
+            this.ext.mavLibraryLicenses.each { key, value ->
+                name = key
+                url = value
             }
         }
     }
