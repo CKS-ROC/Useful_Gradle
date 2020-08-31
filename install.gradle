@@ -114,18 +114,60 @@ if (checkIsAndroidProject()) {
 project.afterEvaluate {
     publishing {
         publications {
-            mavenPublish(MavenPublication) {
-                if (checkIsAndroidProject()) {
-                    artifact bundleReleaseAar
-                    artifact androidJavadocsJar
-                    artifact androidSourcesJar
-                } else {
+            if (checkIsAndroidProject()) {
+                def hasFlavors = false
+                android.libraryVariants.all { variant ->
+                    if (variant.buildType.name.contains("debug")) {
+                        return
+                    }
+                    hasFlavors = !variant.flavorName.isEmpty()
+                    if (hasFlavors) {
+//                        println "install Show libraryVariants hasFlavors : " + hasFlavors
+                        def artifactIdSuffix = hasFlavors ? variant.flavorName.replace('_', '-').capitalize() : ''
+                        variant.productFlavors.each { flavor ->
+                            def flavorArtifactIdSuffix = flavor.ext.has('artifactIdSuffix') ? flavor.ext.artifactIdSuffix : flavor.name
+                            if (!flavorArtifactIdSuffix.isEmpty()) {
+                                artifactIdSuffix = artifactIdSuffix.replace(flavor.name.capitalize(), "${flavorArtifactIdSuffix}")
+                            } else {
+                                artifactIdSuffix = artifactIdSuffix.replace(flavor.name.capitalize(), "")
+                            }
+                        }
+//                        println "install Show libraryVariants artifactIdSuffix  : " + artifactIdSuffix
+                        def publicationName = "${variant.name.capitalize()}"
+//                        println "install Show libraryVariants publicationName  : " + publicationName
+//                        def flavorbuildtype =variant.name
+//                        println "install Show libraryVariants flavor with buildtype : "+flavorbuildtype
+//                        if (flavorbuildtype.toString().contains("Release")){
+////                            println "install Show libraryVariants flavor with buildtype UpperCase: "+flavorbuildtype.substring(0, 1).toUpperCase()+ flavorbuildtype.substring(1)
+//                            def taskname =  "bundle"+flavorbuildtype.substring(0, 1).toUpperCase()+ flavorbuildtype.substring(1)+"Aar"
+////                            println "install Show libraryVariants taskname : "+taskname
+//                            artifact taskname
+//                        }
+                        "$publicationName"(MavenPublication) {
+//                            artifactId curArtifactId
+//                            from components.findByName("android${variant.name.capitalize()}")
+                            artifact androidJavadocsJar
+                            artifact androidSourcesJar
+//                            artifact jniSymbolsJar
+                            def taskname = "bundle" + "${variant.name.capitalize()}" + "Aar"
+                            artifact tasks.findByName(taskname)
+                        }
+                    } else {
+                        mavenPublish(MavenPublication) {
+                            artifact bundleReleaseAar
+                            artifact androidJavadocsJar
+                            artifact javadocJar
+                            decoratePom(pom)
+                        }
+                    }
+                }
+            } else {
+                mavenPublish(MavenPublication) {
                     artifact jar
                     artifact sourcesJar
                     artifact javadocJar
+                    decoratePom(pom)
                 }
-                //FIXME
-                decoratePom(pom)
             }
         }
 
