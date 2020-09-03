@@ -150,7 +150,7 @@ def syncVersionAndTagWithPath(String version_properties_path, int prefixn, int a
     println "Show prefix " + (prefixn * 10000000)
     println "Show api_feature  " + (apifeaturen * 10000)
     println "Show build " + (buildn * 10)
-    println "Show hotfix " + hotfixn
+//    println "Show hotfix " + hotfixn
     println "Show VERSION_CODE " + ((prefixn * 10000000)+(apifeaturen * 10000)+(buildn * 10)+hotfixn)
     versionProps['VERSION_NAME_PREFIX'] = prefixn.toString()+"."+apifeaturen.toString()
     versionProps['VERSION_NAME_HOTFIX'] = hotfixn.toString()
