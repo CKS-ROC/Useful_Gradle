@@ -5,6 +5,7 @@ ext {
     increaseHotfixVersion = this.&increaseHotfixVersionWithFlavor
     decreaseVersion = this.&decreaseVersionWithFlavor
     currentVersion = this.&showCurrentVersionWithFlavor
+    syncversionandtag = this.&syncVersionAndTagWithFlavor
 }
 
 class Version {
@@ -125,5 +126,36 @@ def showCurrentVersionWithFlavor(String flavor) {
     versionProps.load(new FileInputStream(pfile))
     def buildVersionName = versionProps['VERSION_NAME_PREFIX'] + "." + versionProps['VERSION_NAME_BUILD']
     println this.project.name +" current : $buildVersionName"
+}
+
+def syncVersionAndTagWithFlavor(String flavor, int prefixn, int apifeaturen,  int buildn,int hotfixn) {
+    if (flavor ==null || flavor.equals("")){
+        syncVersionAndTagWithPath('version.properties',prefixn,apifeaturen,buildn,hotfixn)
+    }else {
+        def path = "./src/"+flavor+"/version.properties"
+        syncVersionAndTagWithPath(path,prefixn,apifeaturen,buildn,hotfixn)
+    }
+}
+
+def syncVersionAndTagWithPath(String version_properties_path, int prefixn, int apifeaturen,  int buildn,int hotfixn) {
+    Properties versionProps = new Properties()
+    if (version_properties_path == null || version_properties_path.equals("")) {
+        version_properties_path = 'version.properties'
+    }
+    def pfile = file(version_properties_path)
+    if (!pfile.exists()) {
+        pfile = file('version.properties')
+    }
+    versionProps.load(new FileInputStream(pfile)) 
+    println "Show prefix " + (prefixn * 10000000)
+    println "Show api_feature  " + (apifeaturen * 10000)
+    println "Show build " + (buildn * 10)
+    println "Show hotfix " + hotfix
+    println "Show VERSION_CODE " + ((prefixn * 10000000)+(apifeaturen * 10000)+(buildn * 10)+hotfixn)
+    versionProps['VERSION_NAME_PREFIX'] = prefixn.toString()+"."+apifeaturen.toString()
+    versionProps['VERSION_NAME_HOTFIX'] = hotfixn.toString()
+    versionProps['VERSION_NAME_BUILD'] = buildn.toString()
+    versionProps['VERSION_CODE'] = ((prefixn * 10000000)+(apifeaturen * 10000)+(buildn * 10)+hotfixn).toString()
+    versionProps.store(pfile.newWriter(), null)
 }
 
