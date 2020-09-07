@@ -1,0 +1,32 @@
+
+ext {
+    android_builder_main_version = this.&getAndroidBuilderMainVersion
+}
+
+def getAndroidBuilderMainVersion() {
+    def android_builder_version = "3.5.3"
+    this.rootProject.buildscript.configurations.classpath
+            .resolvedConfiguration
+            .firstLevelModuleDependencies.
+            each {
+                def name = it.name
+                if (name.contains('com.android.tools.build:gradle')) {
+                    def moduleVersion = it.moduleVersion
+                    if (moduleVersion.contains("-")) {
+                        def versionArray = moduleVersion.split("-")
+                        version = versionArray[0]
+                        alpha = versionArray[1]
+                    } else {
+                        version = moduleVersion
+                        android_builder_version = moduleVersion
+                        println "Android Builder Version : " + android_builder_version
+                    }
+                }
+            }
+    android_builder_main_version = Integer.parseInt(android_builder_version.split("\\.")[0])
+    println "Android Builder Main Version : " + android_builder_main_version
+    return android_builder_main_version
+}
+
+
+
