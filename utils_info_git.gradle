@@ -1,0 +1,21 @@
+ext {
+    current_branch  = this.&gitBranch
+    is_with_submodule  = this.&isWithSubmoduleBranch
+}
+
+def gitBranch() {
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    branch
+}
+
+def isWithSubmoduleBranch() {
+    if (gitBranch().contains("dev_sub")) {
+        return true
+    } else {
+        return false
+    }
+}

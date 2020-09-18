@@ -1,10 +1,9 @@
+def android_builder_version = "3.5.3"
 
 ext {
-    android_builder_main_version = this.&getAndroidBuilderMainVersion
+    android_builder_main_version = 3
 }
-
-def getAndroidBuilderMainVersion() {
-    def android_builder_version = "3.5.3"
+android {
     this.rootProject.buildscript.configurations.classpath
             .resolvedConfiguration
             .firstLevelModuleDependencies.
@@ -23,9 +22,8 @@ def getAndroidBuilderMainVersion() {
                     }
                 }
             }
-    android_builder_main_version = Integer.parseInt(android_builder_version.split("\\.")[0])
+    ext.android_builder_main_version = Integer.parseInt(android_builder_version.split("\\.")[0])
     println "Android Builder Main Version : " + android_builder_main_version
-    return android_builder_main_version
 }
 
 

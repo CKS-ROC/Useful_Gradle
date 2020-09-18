@@ -1,0 +1,35 @@
+ext {
+    local_host_ipv4 = this.&getLocalIPv4
+    local_host_ipv6 = this.&getLocalIPv6
+}
+
+def getLocalIPv4() {
+    String ip = '/127.0.0.1'
+    def ip4s = []
+    NetworkInterface.getNetworkInterfaces().findAll {
+        it.isUp() && !it.isLoopback() && !it.isPointToPoint() && !it.isVirtual() && !it.getName().startsWith("br-")
+    }.each {
+        it.getInetAddresses()
+                .findAll { !it.isLoopbackAddress() && it instanceof Inet4Address }
+                .each { ip4s << it }
+    }
+    int index = 0
+    if (ip4s.size() == 0) index = 0 else index = ip4s.size() - 1
+    ip = ip4s[index].toString()
+    return ip.substring(ip.indexOf('/') + 1, ip.length())
+}
+
+def getLocalIPv6() {
+    def ip6s = []
+    NetworkInterface.getNetworkInterfaces()
+            .findAll { it.isUp() && !it.isLoopback() && !it.isVirtual() }
+            .each {
+                it.getInetAddresses()
+                        .findAll { !it.isLoopbackAddress() && it instanceof Inet6Address }
+                        .each { ip6s << it }
+            }
+    return ip6s
+}
+
+
+
