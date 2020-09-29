@@ -7,6 +7,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'maven-publish'
 version = this.ext.library_versionName
 group = this.ext.library_pom_bintray_GroupId
+
 //FIXME  the library name must(?) the same project name ??!!  how set it diff ?
 def pomArtifactId = project.name                         // Maven library name for the artifact
 tasks.withType(Javadoc).all { enabled = false }
@@ -140,6 +141,7 @@ if (checkIsAndroidProject()) {
 //Ref : https://blog.csdn.net/bangelua/article/details/95017031
 //Ref : https://blog.csdn.net/pxq10422/article/details/105127853/?utm_medium=distribute.pc_relevant.none-task-blog-title-8&spm=1001.2101.3001.4242
 //Ref : https://github.com/YuTianTina/ForMultiUploadMaven/blob/master/mylibrary/maven_variant_config.gradle
+//Ref : https://docs.gradle.org/current/userguide/publishing_maven.htm
 project.afterEvaluate {
     publishing {
         publications {
@@ -240,10 +242,6 @@ project.afterEvaluate {
         repositories {
             //FIXME set true/false @ ext build.grale  !!
             //FIXME get repo setting from reposetting file lie : repo_setting.properties !!!
-            def isToRemoteRepo = true
-            def isToInternalRepo = false
-            def isToMavenLocal = false
-            def isToGit = true
             //Ref : https://www.jianshu.com/p/960a60a84339
             //Ref : https://www.itread01.com/content/1546745592.html
             //Ref : https://medium.com/michael-%E9%9A%A8%E7%AD%86/another-way-to-create-a-private-maven-repository-9c6a45952228
@@ -251,13 +249,14 @@ project.afterEvaluate {
             //Ref : https://github.com/mageddo/gradle-embed-maven-repo
             //Ref : https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-gradle-for-use-with-github-packages
             //Ref : https://github.com/hyysguyang/gradle-git-maven-repo-plugin
+            //Ref : https://html.developreference.com/article/15003154/Publish+a+zip+file+to+Nexus+(Maven)+with+Gradle
             //FIXME use git public project as repo & use git push ?
             if (isToGit) {
                 maven {
                     url = "file:///${rootProject.rootDir}/maven-repository"
                 }
             }
-            //TODO build & deploy Sonatype Nexus Repository
+//            //TODO build & deploy Sonatype Nexus Repository
             if (isToRemoteRepo) {
                 maven {
                     credentials {
@@ -268,7 +267,7 @@ project.afterEvaluate {
                 }
             }
 
-            //TODO Project local repo
+//            //TODO Project local repo
             if (isToInternalRepo) {
                 maven {
                     url = "file:///${this.project.rootProject.rootDir}/maven-repository"
@@ -279,9 +278,42 @@ project.afterEvaluate {
             if (isToMavenLocal || (!isToInternalRepo && !isToRemoteRepo)) {
                 mavenLocal()
             }
+
+            //nexus
+            File f = this.file('sonatype_nexus.properties')
+            if (f.exists() && !f.isDirectory()) {
+                assert file(f).exists()
+                Properties props = new Properties()
+                props.load(new FileInputStream(f))
+                if (this.ext.isSonatype_Nexus) {
+                    maven {
+                        name 'Sonatype_Nexus'
+                        url this.ext.Sonatype_NexusUrl_Url
+                        credentials {
+                            username props['sonatype.user']
+                            password props['sonatype.password']
+                        }
+                    }
+                }
+            }
         }
     }
 }
+
+//apply plugin: 'de.marcphilipp.nexus-publish'
+//nexusPublishing {
+//    repositories {
+//        myNexus {
+//            File f = this.file('sonatype_nexus.properties')
+//            if (f.exists() && !f.isDirectory()) {
+//                Properties props = new Properties()
+//                props.load(new FileInputStream(f))
+//                username props['sonatype.user']
+//                password props['sonatype.password']
+//            }
+//        }
+//    }
+//}
 
 def decoratePom(pom) {
     pom.name = project.name
