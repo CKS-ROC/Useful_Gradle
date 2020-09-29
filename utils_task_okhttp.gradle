@@ -1,0 +1,61 @@
+//For  deploy  apk
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "com.squareup.okhttp3:okhttp:3.14.0"
+    }
+}
+
+import okhttp3.OkHttpClient
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody
+import groovy.json.JsonSlurper
+
+task okHttp_demo() {
+    group "demo_okhttp"
+    doFirst {
+        OkHttpClient client = new  OkHttpClient.Builder().build()
+//        //Here pass
+        URL url = new URL('https://tw.yahoo.com')
+        //FIXME   ide can not resolve all reference,It always has been --- okhttp3.Request
+        okhttp3.Request request = new okhttp3.Request.Builder().url(url ).build()
+        okhttp3.Response response =client.newCall(request).execute()
+        println "Show "+response.body().string()
+        response.close()
+    }
+}
+
+task upload_apk_by_okhttp() {
+    group "deploy_apk_with_okhttp"
+    doFirst {
+        def client = new OkHttpClient.Builder().build()
+        URL url = new URL('https://tw.yahoo.com')
+        def file = new File("path")
+        def body = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.name, RequestBody.create(MultipartBody.FORM, file))
+                .addFormDataPart("version", version)
+                .addFormDataPart("minVersion", minVersion)
+                .build()
+        def request = new Request.Builder()
+                .header("Authorization", "Bearer XXXXXXXXXX")
+                .header("X-Secret", "{\"account_id\":2,\"namespace\":\"gam.operator.internal\",\"expires_in\":3600000,\"token_string\":\"XXXXXX\",\"claims\":{\"FirstName\":\"app001\",\"PairTokenKey\":\"XXXXXXXXXX\",\"Roles\":\"null\"},\"username\":\"tim001\",\"account_type\":1}")
+                .url(url)
+                .post(body)
+                .build()
+        def response = client.newCall(request).execute()
+        println response.body().string()
+        def isSuccess = response.isSuccessful()        
+        println "Show "+response.body().string()
+//        if (response.isSuccessful()) {
+//            logger.log(LogLevel.ERROR, "upload scusses : ${response.body().string()}")
+//        } else {
+//            logger.log(LogLevel.ERROR, "upload failure : ${response.message()}")
+//        }
+        response.close()
+    }
+}
