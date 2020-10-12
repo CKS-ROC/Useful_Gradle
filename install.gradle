@@ -253,17 +253,36 @@ project.afterEvaluate {
             //FIXME use git public project as repo & use git push ?
             if (isToGit) {
                 maven {
+//                    url = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
                     url = "file:///${rootProject.rootDir}/maven-repository"
                 }
             }
-//            //TODO build & deploy Sonatype Nexus Repository
+//            //TODO build & deploy Sonatype Nexus or Git like  Repository
             if (isToRemoteRepo) {
-                maven {
-                    credentials {
-                        username "my repo username"
-                        password "my repo password"
+                //nexus
+                File f = this.file('sonatype_nexus.properties')
+                Properties props = new Properties()
+                if (f.exists() && !f.isDirectory()) {
+                    assert file(f).exists()
+                    props.load(new FileInputStream(f))
+                    if (this.ext.isSonatype_Nexus) {
+                        maven {
+                            name 'Sonatype_Nexus'
+                            url this.ext.Sonatype_NexusUrl_Url
+                            credentials {
+                                username props['sonatype.user']
+                                password props['sonatype.password']
+                            }
+                        }
                     }
-                    url = "my repo url"
+                }else{
+                    maven {
+                        credentials {
+                            username "my repo username"
+                            password "my repo password"
+                        }
+                        url = "my repo url"
+                    }
                 }
             }
 
@@ -271,30 +290,12 @@ project.afterEvaluate {
             if (isToInternalRepo) {
                 maven {
                     url = "file:///${this.project.rootProject.rootDir}/maven-repository"
-//                    url = getStringProperty("mavRepoInternalUrl")
+//                    url = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
                 }
             }
 
             if (isToMavenLocal || (!isToInternalRepo && !isToRemoteRepo)) {
                 mavenLocal()
-            }
-
-            //nexus
-            File f = this.file('sonatype_nexus.properties')
-            if (f.exists() && !f.isDirectory()) {
-                assert file(f).exists()
-                Properties props = new Properties()
-                props.load(new FileInputStream(f))
-                if (this.ext.isSonatype_Nexus) {
-                    maven {
-                        name 'Sonatype_Nexus'
-                        url this.ext.Sonatype_NexusUrl_Url
-                        credentials {
-                            username props['sonatype.user']
-                            password props['sonatype.password']
-                        }
-                    }
-                }
             }
         }
     }
