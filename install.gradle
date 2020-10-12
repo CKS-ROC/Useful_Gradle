@@ -349,7 +349,7 @@ def addDependencies(pom) {
     pom.withXml {
         final dependenciesNode = asNode().appendNode('dependencies')
         ext.addDependency = { Dependency dep, String scope ->
-            if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified")
+            if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified"|| dep.version == "unspecified")
                 return // ignore invalid dependencies
 
             if (dep.artifacts.size() > 0) {
@@ -364,6 +364,21 @@ def addDependencies(pom) {
     }
 }
 
+def manageConfigurations(configurations) {
+    configurations.compile.getDependencies().each { dep -> addDependency(dep, "compile") }
+    configurations.testImplementation.getDependencies().each { dep -> addDependency(dep, "test") }
+    configurations.testCompile.getDependencies().each { dep -> addDependency(dep, "test") }
+    if (!checkIsAndroidProject()) {
+        configurations.implementation.getDependencies().each { dep -> addDependency(dep, "runtime") }
+        configurations.runtime.getDependencies().each { dep -> addDependency(dep, "runtime") }
+        configurations.testRuntime.getDependencies().each { dep -> addDependency(dep, "test") }
+    } else {
+        configurations.api.getDependencies().each { dep -> addDependency(dep, "compile") }
+        configurations.implementation.getDependencies().each { dep -> addDependency(dep, "compile") }
+    }
+}
+
+//Ref : https://stackoverflow.com/questions/32998716/maven-publish-cannot-not-apply-withxml-on-pom-file-no-signature-of-method
 def addDependencyNode(dependenciesNode, dep, scope, classifier, extension) {
     final dependencyNode = dependenciesNode.appendNode('dependency')
     dependencyNode.appendNode('groupId', dep.group)
@@ -396,15 +411,3 @@ def addDependencyNode(dependenciesNode, dep, scope, classifier, extension) {
     }
 }
 
-def manageConfigurations(configurations) {
-    configurations.compile.getDependencies().each { dep -> addDependency(dep, "compile") }
-    configurations.api.getDependencies().each { dep -> addDependency(dep, "compile") }
-    configurations.implementation.getDependencies().each { dep -> addDependency(dep, "runtime") }
-    configurations.testImplementation.getDependencies().each { dep -> addDependency(dep, "test") }
-    configurations.testCompile.getDependencies().each { dep -> addDependency(dep, "test") }
-
-    if (!checkIsAndroidProject()) {
-        configurations.runtime.getDependencies().each { dep -> addDependency(dep, "runtime") }
-        configurations.testRuntime.getDependencies().each { dep -> addDependency(dep, "test") }
-    }
-}
