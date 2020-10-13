@@ -254,7 +254,7 @@ project.afterEvaluate {
             if (isToGit) {
                 maven {
 //                    url = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
-                    url = "file:///${rootProject.rootDir}/maven-repository"
+                    url = "file:///${this.project.rootProject.rootDir}/maven-repository"
                 }
             }
 //            //TODO build & deploy Sonatype Nexus or Git like  Repository
