@@ -289,8 +289,7 @@ project.afterEvaluate {
 //            //TODO Project local repo
             if (isToInternalRepo) {
                 maven {
-                    url = "file:///${this.project.rootProject.rootDir}/maven-repository"
-//                    url = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+                   url = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
                 }
             }
 
