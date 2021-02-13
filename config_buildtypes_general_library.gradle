@@ -1,0 +1,22 @@
+android {
+    buildTypes {
+        debug {
+            matchingFallbacks = ['release', 'debug']
+            zipAlignEnabled false
+            minifyEnabled false
+            debuggable true
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            matchingFallbacks = ['release', 'debug']
+            zipAlignEnabled true
+            minifyEnabled false
+            debuggable false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //Ref : https://blog.moetz.dev/android/publish-libraries-including-a-proguard-configuration/
+            consumerProguardFiles 'consumer-rules.pro'
+        }
+    }
+}
