@@ -1,0 +1,55 @@
+def android_builder_version = android_gradle_plugin_version
+
+ext {
+    android_builder_main_version = Integer.parseInt(android_builder_version.split("\\.")[0])
+    android_builder_mid_version = Integer.parseInt(android_builder_version.split("\\.")[1])
+}
+
+android {
+    this.rootProject.buildscript.configurations.classpath
+            .resolvedConfiguration
+            .firstLevelModuleDependencies.
+            each {
+                def name = it.name
+                if (name.contains('com.android.tools.build:gradle')) {
+                    def moduleVersion = it.moduleVersion
+                    if (moduleVersion.contains("-")) {
+                        def versionArray = moduleVersion.split("-")
+                        ext.android_builder_main_version = Integer.parseInt(versionArray[0])
+                        ext.android_builder_mid_version = Integer.parseInt(versionArray[1])
+                    } else {
+                        version = moduleVersion
+                        android_builder_version = moduleVersion
+                        ext.android_builder_main_version = Integer.parseInt(android_builder_version.split("\\.")[0])
+                        ext.android_builder_mid_version = Integer.parseInt(android_builder_version.split("\\.")[1])
+                    }
+                }
+            }
+
+}
+
+dependencies {
+   if (android_builder_main_version < 7) {
+//        add(KotlinPluginKt.PLUGIN_CLASSPATH_CONFIGURATION_NAME, "androidx.compose.compiler:compiler:$compose_version")
+       //FIXME is hard code !!! KotlinPluginKt.PLUGIN_CLASSPATH_CONFIGURATION_NAME is right !!
+       add("kotlinCompilerPluginClasspath" ,"androidx.compose.compiler:compiler:$compose_version")
+        // ...compiler and runtime from previous code snippet
+        implementation "androidx.compose.runtime:runtime:$compose_version"
+        implementation "androidx.compose.ui:ui:$compose_version"
+        // Tooling support (Previews, etc.)
+        implementation "androidx.compose.ui:ui-tooling:$compose_version"
+        // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
+        implementation "androidx.compose.foundation:foundation:$compose_version"
+        // Material Design
+        implementation "androidx.compose.material:material:$compose_version"
+        // Material design icons
+        implementation "androidx.compose.material:material-icons-core:$compose_version"
+        implementation "androidx.compose.material:material-icons-extended:$compose_version"
+        // Integration with activities
+        implementation "androidx.activity:activity-compose:$compose_activity_version"
+        // Integration with ViewModels
+        implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$compose_lifecycle_version"
+        // UI Tests
+        androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    }
+}
