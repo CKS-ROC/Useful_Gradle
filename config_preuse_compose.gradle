@@ -1,4 +1,4 @@
-def android_builder_version = android_gradle_plugin_version
+def android_builder_version = "4.0.1"
 
 ext {
     android_builder_main_version = Integer.parseInt(android_builder_version.split("\\.")[0])
@@ -31,17 +31,13 @@ android {
             compose true
         }
     }
-    kotlinOptions {
-        jvmTarget = '11'
-        freeCompilerArgs += ["-Xskip-prerelease-check"]
-        useIR = true
-    }
+
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
         kotlinCompilerVersion kotlin_version
     }
 }
-
+//https://developer.android.google.cn/jetpack/androidx/versions/all-channel?hl=zh-cn
 dependencies {
     if (android_builder_main_version < 7) {
 //        add(KotlinPluginKt.PLUGIN_CLASSPATH_CONFIGURATION_NAME, "androidx.compose.compiler:compiler:$compose_version")
@@ -49,10 +45,22 @@ dependencies {
         add("kotlinCompilerPluginClasspath", "androidx.compose.compiler:compiler:$compose_version")
         // ...compiler and runtime from previous code snippet
         implementation "androidx.compose.runtime:runtime:$compose_version"
+        implementation "androidx.compose.runtime:runtime-saveable:$compose_version"
+        implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
 
         implementation "androidx.compose.ui:ui:$compose_version"
+        implementation "androidx.compose.ui:ui-text:$compose_version"
+        implementation "androidx.compose.ui:ui-geometry:$compose_version"
+        implementation "androidx.compose.ui:ui-graphics:$compose_version"
         // Tooling support (Previews, etc.)
         implementation "androidx.compose.ui:ui-tooling:$compose_version"
+        implementation "androidx.compose.ui:ui-util:$compose_version"
+        implementation "androidx.compose.ui:ui-unit:$compose_version"
+        // Animation
+        implementation "androidx.compose.animation:animation:$compose_version"
+        implementation "androidx.compose.animation:animation-core:$compose_version"
+        // Navigation
+        implementation "androidx.navigation:navigation-compose:$compose_navigation_version"
         // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
         implementation "androidx.compose.foundation:foundation:$compose_version"
         implementation "androidx.compose.foundation:foundation-layout:$compose_version"
@@ -61,16 +69,21 @@ dependencies {
         // Material design icons
         implementation "androidx.compose.material:material-icons-core:$compose_version"
         implementation "androidx.compose.material:material-icons-extended:$compose_version"
+        implementation "androidx.compose.material:material-ripple:$compose_version"
+        // Viewbinding
+        implementation "androidx.compose.ui:ui-viewbinding:$compose_version"
+
+
         // Constraintlayout
         implementation "androidx.constraintlayout:constraintlayout-compose:$compose_constraintlayout_version"
         // Integration with activities
         implementation "androidx.activity:activity-compose:$compose_activity_version"
         // Integration with ViewModels
         implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$compose_lifecycle_version"
-        implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$compose_version"
-
-        implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
+ 
         // UI Tests
+        androidTestImplementation "androidx.compose.ui:ui-test:$compose_version"
         androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     }
 }
+
