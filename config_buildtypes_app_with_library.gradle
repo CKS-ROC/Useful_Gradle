@@ -1,0 +1,108 @@
+android {
+    def isapptype = project.getPlugins().hasPlugin("com.android.internal.application")
+    project.plugins.each { p ->
+        if (p.toString().contains("com.android.build.gradle.AppPlugin")) {
+            isapptype = true
+        }
+    }
+    buildTypes {
+        debug {
+            matchingFallbacks = ['release', 'debug']
+            zipAlignEnabled false
+            if (isapptype) {
+                minifyEnabled false
+                debuggable true
+                shrinkResources false
+            }
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //Ref : https://blog.moetz.dev/android/publish-libraries-including-a-proguard-configuration/
+            consumerProguardFiles 'consumer-rules.pro'
+            dependencies {
+
+            }
+        }
+        release {
+            matchingFallbacks = ['release', 'debug']
+            if (isapptype) {
+                zipAlignEnabled true
+                minifyEnabled true
+                debuggable false
+                shrinkResources true
+            } else {
+                zipAlignEnabled false
+                minifyEnabled false
+                debuggable false
+                shrinkResources false
+            }
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //Ref : https://blog.moetz.dev/android/publish-libraries-including-a-proguard-configuration/
+            consumerProguardFiles 'consumer-rules.pro'
+        }
+        if (isapptype) {
+            prod_debug.initWith(buildTypes.debug)
+            sit_debug.initWith(buildTypes.debug)
+            dev_debug.initWith(buildTypes.debug)
+
+            prod_release.initWith(buildTypes.release)
+            sit_release.initWith(buildTypes.release)
+            dev_release.initWith(buildTypes.release)
+
+            prod_debug {}
+            prod_release {}
+
+            sit_debug {
+                getIsDefault().set(true)
+            }
+            sit_release {}
+
+            dev_debug {
+                dependencies {
+
+                }
+            }
+            dev_release {
+                dependencies {
+
+                }
+            }
+        }
+    }
+    if (isapptype) {
+        variantFilter { variant ->
+            def buildTypename = variant.buildType.name.toString()
+            if (buildTypename.equals('release') || buildTypename.equals('debug')) {
+                variant.setIgnore(true)
+            }
+        }
+    }
+    if (isapptype) {
+        sourceSets {
+            prod_debug {
+//             java.srcDirs += ['src/debug/java']
+                dependencies {
+
+                }
+            }
+            prod_release {
+//             java.srcDirs += ['src/release/java']
+                dependencies {
+
+                }
+            }
+
+            sit_debug {
+//             java.srcDirs += ['src/debug/java']
+            }
+            sit_release {
+//             java.srcDirs += ['src/release/java']
+            }
+
+            dev_debug {
+//             java.srcDirs += ['src/debug/java']
+            }
+            dev_release {
+//             java.srcDirs += ['src/release/java']
+            }
+        }
+    }
+}
