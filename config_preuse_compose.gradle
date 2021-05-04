@@ -36,11 +36,8 @@ android {
         kotlinCompilerExtensionVersion compose_version
         kotlinCompilerVersion kotlin_version
     }
-
-    kotlinOptions {
-        useIR = true
-    }
 }
+//https://maven.google.com/web/index.html?q=compose#androidx.compose.ui
 //https://developer.android.google.cn/jetpack/androidx/versions/all-channel?hl=zh-cn
 dependencies {
     if (android_builder_main_version < 7) {
@@ -85,6 +82,8 @@ dependencies {
         // Integration with ViewModels
         implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$compose_lifecycle_version"
 
+        //accompanist  -- Utils for Jetpack Compose
+        implementation "com.google.accompanist:accompanist-coil:$compose_accompanist"
 
         implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
         // UI Tests
