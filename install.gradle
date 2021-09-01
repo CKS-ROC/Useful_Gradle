@@ -2,7 +2,7 @@
 //Ref : https://github.com/palantir/gradle-git-version
 //Ref : https://github.com/n0mer/gradle-git-properties
 //Ref : https://juejin.im/post/6844904144386392071
-apply plugin: 'com.github.dcendents.android-maven'
+//apply plugin: 'com.github.dcendents.android-maven'
 //https://www.jianshu.com/p/960a60a84339
 apply plugin: 'maven-publish'
 version = this.ext.library_versionName
@@ -17,46 +17,97 @@ def checkIsAndroidProject() {
     return plugins.hasPlugin('com.android.application') || plugins.hasPlugin('com.android.library')
 }
 
-install {
-    repositories.mavenInstaller {
-        // This generates POM.xml with proper parameters
-        pom {
-            project {
-                if (checkIsAndroidProject()) {
-                    packaging 'aar'
-                } else {
-                    packaging 'jar'
-                }
-
-                // Add your description here
-                name pomArtifactId
-                description = this.ext.mavLibraryDescription
-                url this.ext.mavSiteUrl
-                // Set your license
-                licenses {
-                    license {
-                        this.ext.mavLibraryLicenses.each { key, value ->
-                            name = key
-                            url = value
+publishing {
+    publications {
+        if (checkIsAndroidProject()) {
+            aar(MavenPublication) {
+                pom {
+                    name = pomArtifactId
+                    description = this.ext.mavLibraryDescription
+                    url = this.ext.mavSiteUrl
+                    properties = [
+                            myProp          : "value",
+                            "prop.with.dots": "anotherValue"
+                    ]
+                    // Set your license
+                    licenses {
+                        license {
+                            this.ext.mavLibraryLicenses.each { key, value ->
+                                name = key
+                                url = value
+                            }
                         }
                     }
-                }
-                developers {
-                    developer {
-                        id this.ext.developerid
-                        name this.ext.developername
-                        email this.ext.developeremail
+                    developers {
+                        developer {
+                            id = this.ext.developerid
+                            name = this.ext.developername
+                            email = this.ext.developeremail
+                        }
+                    }
+                    scm {
+                        connection = this.ext.scmConnectionUrl
+                        developerConnection = this.ext.scmDeveloperConnectionUrl
+                        url = this.ext.scmUrl
                     }
                 }
-                scm {
-                    connection this.ext.scmConnectionUrl
-                    developerConnection this.ext.scmDeveloperConnectionUrl
-                    url this.ext.scmUrl
+            }
+        } else {
+            mavenJava(MavenPublication) {
+                println("Maven publish: package name JJJ")
+                pom {
+                    name = pomArtifactId
+                    description = this.ext.mavLibraryDescription
+                    url = this.ext.mavSiteUrl
+                    properties = [
+                            myProp          : "value",
+                            "prop.with.dots": "anotherValue"
+                    ]
+                    // Set your license
+                    licenses {
+                        license {
+                            this.ext.mavLibraryLicenses.each { key, value ->
+                                name = key
+                                url = value
+                            }
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = this.ext.developerid
+                            name = this.ext.developername
+                            email = this.ext.developeremail
+                        }
+                    }
+                    scm {
+                        connection = this.ext.scmConnectionUrl
+                        developerConnection = this.ext.scmDeveloperConnectionUrl
+                        url = this.ext.scmUrl
+                    }
                 }
             }
         }
+        //Ref : https://developer.android.google.cn/studio/build/maven-publish-plugin?hl=zh-cn
+//        // Creates a Maven publication called "release".
+//        release(MavenPublication) {
+//
+//        }
+//
+//        // Creates a Maven publication called “debug”.
+//        debug(MavenPublication) {
+//
+//        }
+
+//        maven(MavenPublication) {
+
+//        }
+
+//        mavenJava(MavenPublication) {
+//
+//        }
     }
 }
+
 
 if (checkIsAndroidProject()) {
     task androidJavadocs(type: Javadoc) {
@@ -275,7 +326,7 @@ project.afterEvaluate {
                             }
                         }
                     }
-                }else{
+                } else {
                     maven {
                         credentials {
                             username "my repo username"
@@ -289,7 +340,7 @@ project.afterEvaluate {
 //            //TODO Project local repo
             if (isToInternalRepo) {
                 maven {
-                   url = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+                    url = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
                 }
             }
 
@@ -349,7 +400,7 @@ def addDependencies(pom) {
     pom.withXml {
         final dependenciesNode = asNode().appendNode('dependencies')
         ext.addDependency = { Dependency dep, String scope ->
-            if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified"|| dep.version == "unspecified")
+            if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified" || dep.version == "unspecified")
                 return // ignore invalid dependencies
 
             if (dep.artifacts.size() > 0) {
@@ -410,4 +461,3 @@ def addDependencyNode(dependenciesNode, dep, scope, classifier, extension) {
         }
     }
 }
-
