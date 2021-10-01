@@ -29,9 +29,15 @@ Version readVersionWithFlavor(String flavor) {
     if (!pfile.exists()) {
         pfile = file('version.properties')
     }
+    println "Show   file exist ? : " + pfile.exists()
+    //Ref : https://stackoverflow.com/questions/38275583/create-version-txt-file-in-project-dir-via-build-gradle-task
+    if (!pfile.exists()) {
+        VersionInit()
+    }
     defaultVersionProps.load(new FileInputStream(pfile))
     def defaultBuildVersionCode = defaultVersionProps['VERSION_CODE']
     def defaultBuildVersionName = defaultVersionProps['VERSION_NAME_PREFIX'] + "." + defaultVersionProps['VERSION_NAME_BUILD']
+    println this.project.name +" defaultBuildVersionName : $defaultBuildVersionName"
     return new Version(versionCode: defaultBuildVersionCode, versionName: defaultBuildVersionName)
 }
 
